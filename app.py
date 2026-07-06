@@ -47,9 +47,12 @@ def save_bookings(bookings):
 
 def get_equipment(equipment_id):
     for item in EQUIPMENT:
+    
+
         if item["id"] == equipment_id:
             return item
     return None
+
 
 
 # ---------------------------------------------------------------------------
@@ -62,12 +65,12 @@ def parse_date(value):
 
 def rental_days(from_date, to_date):
     """Number of days a rental covers."""
-    return (to_date - from_date).days
+    return (to_date - from_date).days 
 
 
 def dates_overlap(start_a, end_a, start_b, end_b):
     """True if date range A overlaps date range B."""
-    return start_b <= start_a <= end_b
+    return start_a <= end_b and start_b <= end_a
 
 
 def find_conflicting_booking(equipment_id, from_date, to_date, bookings):
@@ -77,6 +80,7 @@ def find_conflicting_booking(equipment_id, from_date, to_date, bookings):
             continue
         if booking.get("status") == "cancelled":
             continue
+     
         if dates_overlap(
             from_date,
             to_date,
@@ -85,6 +89,9 @@ def find_conflicting_booking(equipment_id, from_date, to_date, bookings):
         ):
             return booking
     return None
+
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -125,8 +132,15 @@ def create_booking():
     data = request.get_json(force=True)
 
     equipment = get_equipment(data.get("equipment_id"))
+
+
     if equipment is None:
         return jsonify({"error": "Unknown equipment"}), 400
+    
+    if equipment["status"] != "available": 
+        return jsonify({"error": "This item is under maintenance"}), 400
+
+    
 
     from_date = parse_date(data["from_date"])
     to_date = parse_date(data["to_date"])
